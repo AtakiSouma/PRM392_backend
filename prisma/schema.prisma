@@ -1,0 +1,123 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider     = "mysql"
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
+}
+
+model Users {
+    id           String   @id @default(uuid())
+    first_name   String
+    avatar       String   @db.Text
+    middle_name  String   @db.Text
+    last_name    String   @db.Text
+    full_name    String   @db.Text
+    email        String   @unique
+    password     String   @db.Text
+    phone_number String   @db.Text
+    is_active    Boolean  @default(true)
+    status       Boolean  @default(true)
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    role_id String
+    role    Roles  @relation(fields: [role_id], references: [id])
+
+    Orders Order[]
+
+    @@index([role_id])
+}
+
+model Roles {
+    id               String   @id @default(uuid())
+    role_name        String   @unique
+    role_description String   @db.Text
+    status           Boolean  @default(true)
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+    Users            Users[]
+}
+
+model Brand {
+    id          String    @id @default(uuid())
+    image       String    @db.Text
+    name        String    @unique
+    description String    @db.Text
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    Product     Product[]
+}
+
+model Category {
+    id          String    @id @default(uuid())
+    image       String    @db.Text
+    name        String    @unique
+    description String    @db.Text
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    Product     Product[]
+}
+
+model Product {
+    id            String          @id @default(uuid())
+    name          String          @unique
+    description   String          @db.Text
+    tags          String          @db.Text
+    originalPrice Float
+    discountPrice Float
+    quantity      Int
+    ratings       Float
+    status        Boolean         @default(true)
+    sold_out      Int
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    brandId       String
+    categoryId    String
+    // Define relations to Brand and Category
+    brand         Brand           @relation(fields: [brandId], references: [id])
+    category      Category        @relation(fields: [categoryId], references: [id])
+    ProductImages ProductImages[]
+    OrderItem     OrderItem[]
+
+    @@index([brandId])
+    @@index([categoryId])
+}
+
+model ProductImages {
+    id        String   @id @default(uuid())
+    image_url String   @db.Text
+    product   Product  @relation(fields: [productId], references: [id])
+    productId String
+
+    @@index([productId])
+}
+
+model Order {
+    id         String      @id @default(uuid())
+    totalPrice Float
+    note       String      @db.Text
+    status     String      @default("Processing")
+    userId     String
+    user       Users       @relation(fields: [userId], references: [id])
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @updatedAt
+    OrderItem  OrderItem[]
+
+    @@index([userId])
+}
+
+model OrderItem {
+    id        String  @id @default(uuid())
+    orderId   String
+    productId String
+    quantity  Int
+    price     Float
+    order     Order   @relation(fields: [orderId], references: [id])
+    product   Product @relation(fields: [productId], references: [id])
+
+    @@index([orderId])
+    @@index([productId])
+}
