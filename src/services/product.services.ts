@@ -159,5 +159,6 @@ class productServices {
 
     return product
   }
+  
 }
 export default new productServices()

@@ -8,6 +8,8 @@ import ErrorHandler from '~/utils/errorHandler'
 import jwtServices from './jwt.services'
 import splitFullName from '~/utils/splitName'
 import generateRandomPhoneNumber from '~/utils/randomPhone'
+import { UserRecord } from 'firebase-admin/auth'
+import { verifyToken } from '~/utils/auth.utils'
 class authServices {
   private getJsonWebToken = async (email: string, id: string) => {
     const payload = {
@@ -86,11 +88,84 @@ class authServices {
         last_name: lastName,
         phone_number: generateRandomPhoneNumber(),
         is_active: true,
-        role_id: 'ba97f3f8-c720-4ae3-b817-d1c1e4e5adb7',
+        role_id: '80c70ad7-aa3a-471a-9992-48932658e2e5',
         avatar: 'https://i.pinimg.com/736x/3b/72/62/3b72621cba7e1b12facb8cd223de9957.jpg'
       }
     })
     return newUser
+  }
+  public async loginGoogle(idToken: string, res: Response, next: NextFunction) {
+    console.log('idToken', idToken)
+    const userRecord = await this.verifyGoogle(idToken)
+    if (!userRecord) {
+      return next(new ErrorHandler('user is not exist', HttpStatusCodes.NOT_FOUND))
+    }
+    console.log(userRecord)
+    const existUser = await prisma.users.findUnique({
+      where: {
+        email: userRecord.email
+      },
+      include: {
+        role: {
+          select: {
+            id: true,
+            role_name: true
+          }
+        }
+      }
+    })
+    if (!existUser) {
+      const { firstName, middleName, lastName } = splitFullName(userRecord.name || 'User Guest Souma')
+
+      const newUser = await prisma.users.create({
+        data: {
+          email: userRecord.email || 'user@gmail.com',
+          full_name: userRecord.name || 'User Guest Souma',
+          first_name: firstName,
+          middle_name: middleName,
+          last_name: lastName,
+          phone_number: generateRandomPhoneNumber(),
+          is_active: true,
+          status: true,
+          role_id: '80c70ad7-aa3a-471a-9992-48932658e2e5',
+          avatar: 'https://i.pinimg.com/736x/3b/72/62/3b72621cba7e1b12facb8cd223de9957.jpg'
+        }
+      })
+      const role_data = await prisma.roles.findUnique({
+        where: { id: newUser.role_id }
+      })
+      const TokenGenerated: TokenGenerate = {
+        email: newUser.email,
+        full_name: newUser.full_name,
+        id: newUser.id,
+        role: newUser.role_id,
+        role_name: role_data?.role_name || 'user'
+      }
+      const accessToken = await jwtServices.generatePairToken(TokenGenerated)
+      return this.generateResponse(TokenGenerated, accessToken, next)
+    } else {
+      const TokenGenerated: TokenGenerate = {
+        email: existUser.email,
+        full_name: existUser.full_name,
+        id: existUser.id,
+        role: existUser.role_id,
+        role_name: existUser.role.role_name
+      }
+      const accessToken = await jwtServices.generatePairToken(TokenGenerated)
+      return this.generateResponse(TokenGenerated, accessToken, next)
+    } 
+  }
+
+  private async verifyGoogle(idToken: string) {
+    const decodedUser: UserRecord = await verifyToken(idToken)
+
+    const user = {
+      email: decodedUser.email,
+      name: decodedUser.displayName,
+      avatar: decodedUser.photoURL
+    }
+
+    return user
   }
 }
 export default new authServices()

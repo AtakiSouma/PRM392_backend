@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express'
 import HttpStatusCodes from '~/constants/HttpStatusCodes'
 import prisma from '~/libs/prisma'
 import ErrorHandler from '~/utils/errorHandler'
+import paymentSevices from './payment.sevices'
 interface ICartItem {
   productId: string
   quantity: number
@@ -52,7 +53,13 @@ class orderServices {
           }
         })
       }
-      return order
+      console.log("orderr-data" , order);
+      console.log("price",totalPrice)
+      const payment_data = await paymentSevices.createPayment(order, totalPrice)
+      return {
+        payment_data,
+        order
+      }
     } catch (error) {
       console.error('Lỗi khi tạo đơn hàng:', error)
       return next(new ErrorHandler('Lỗi khi tạo đơn hàng', HttpStatusCodes.INTERNAL_SERVER_ERROR))

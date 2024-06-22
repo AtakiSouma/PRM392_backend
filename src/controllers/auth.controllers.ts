@@ -32,6 +32,8 @@ const authController = {
       return next(new ErrorHandler('Internal Server Error', HttpStatusCodes.INTERNAL_SERVER_ERROR))
     }
   })
+
+  
 }
 
 export default authController
