@@ -6,6 +6,6 @@ import MiddleWareController from '~/middlewares/auth.middlewares'
 const router = express.Router()
 
 router.post('/', MiddleWareController.isAuthenticated, ProductController.create)
-router.get('/', MiddleWareController.isAuthenticated, ProductController.find)
-router.get('/:id', MiddleWareController.isAuthenticated, ProductController.findOne)
+router.get('/',  ProductController.find)
+router.get('/:id', ProductController.findOne)
 export default router
