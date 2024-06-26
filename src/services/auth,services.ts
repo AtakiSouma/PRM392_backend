@@ -10,6 +10,9 @@ import splitFullName from '~/utils/splitName'
 import generateRandomPhoneNumber from '~/utils/randomPhone'
 import { UserRecord } from 'firebase-admin/auth'
 import { verifyToken } from '~/utils/auth.utils'
+import path from 'node:path'
+import ejs from 'ejs'
+import { sendMail } from '~/utils/sendMail'
 class authServices {
   private getJsonWebToken = async (email: string, id: string) => {
     const payload = {
@@ -65,6 +68,28 @@ class authServices {
     const accessToken = await jwtServices.generatePairToken(TokenGenerated)
     return this.generateResponse(TokenGenerated, accessToken, next)
   }
+
+  public async verification(email: string, next: NextFunction) {
+    const verificationCode = Math.round(1000 + Math.random() * 9000)
+    const data = {
+      verificationCode: verificationCode
+    }
+    const html = await ejs.renderFile(path.join(__dirname, '../mails/sendOTP.ejs'), data)
+    try {
+      await sendMail({
+        email: email,
+        subject: 'Verification email code',
+        template: 'sendOTP.ejs',
+        data
+      })
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, HttpStatusCodes.INTERNAL_SERVER_ERROR))
+    }
+    return {
+      message: 'Verification send mail successfully',
+      verificationCode: verificationCode
+    }
+  }
   public async register({ confirm_password, email, full_name, password }: UserRegisterParams, next: NextFunction) {
     const existUser = await prisma.users.findUnique({
       where: { email: email, status: true }
@@ -94,7 +119,7 @@ class authServices {
     })
     return newUser
   }
-  public async loginGoogle(idToken: string, res: Response, next: NextFunction) {
+  public async loginGoogle(idToken: string, next: NextFunction) {
     console.log('idToken', idToken)
     const userRecord = await this.verifyGoogle(idToken)
     if (!userRecord) {
@@ -153,7 +178,7 @@ class authServices {
       }
       const accessToken = await jwtServices.generatePairToken(TokenGenerated)
       return this.generateResponse(TokenGenerated, accessToken, next)
-    } 
+    }
   }
 
   private async verifyGoogle(idToken: string) {

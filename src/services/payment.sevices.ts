@@ -34,9 +34,9 @@ class paymentService {
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
       amount: price,
-      description: `FueverFriend- Petcare - Payment for the booking #${transID}`,
+      description: `Shop Ecommecrce Payment for the payment #${transID}`,
       bank_code: '',
-      callback_url: 'http://192.168.1.7:8080/api/v1/payment/callback',
+      callback_url: 'http://192.168.43.159:8080/api/v1/payment/callback',
       mac: ''
     }
     const data =
