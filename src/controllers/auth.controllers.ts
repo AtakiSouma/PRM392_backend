@@ -2,7 +2,7 @@ import { CatchAsyncError } from '~/middlewares/catchAsyncError.'
 import { NextFunction, Request, Response } from 'express'
 import ErrorHandler from '~/utils/errorHandler'
 import HttpStatusCodes from '~/constants/HttpStatusCodes'
-import authServices from '~/services/auth,services'
+import authServices from '~/services/auth.services'
 import { sendSuccessResponse } from '~/constants/successResponse'
 import prisma from '~/libs/prisma'
 
