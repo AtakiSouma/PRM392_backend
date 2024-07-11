@@ -19,6 +19,7 @@ const MiddleWareController = {
         return next(new ErrorHandler('You are not authenticated', HttpStatusCodes.UNAUTHORIZED))
       }
       res.locals.payload = payload
+        
       next()
     } catch (error) {
       console.log(error)

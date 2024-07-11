@@ -16,12 +16,23 @@ class productServices {
     next: NextFunction
   ) {
     try {
-      const existProducts = await prisma.product.findUnique({
-        where: { name: name }
-      })
+      // Parallelize database checks
 
-      if (existProducts) {
+      const [existProduct, existCategory, existBrand] = await Promise.all([
+        prisma.product.findUnique({ where: { name: name } }),
+        prisma.category.findUnique({ where: { id: categoryId } }),
+        prisma.brand.findUnique({ where: { id: brandId } })
+      ])
+      if (existProduct) {
         return next(new ErrorHandler('Product already exists', HttpStatusCodes.CONFLICT))
+      }
+
+      if (!existCategory) {
+        return next(new ErrorHandler('Category not found', HttpStatusCodes.NOT_FOUND))
+      }
+
+      if (!existCategory) {
+        return next(new ErrorHandler('Category not found', HttpStatusCodes.NOT_FOUND))
       }
       const uploadPromises = images.map((imagePath) => {
         return cloudinary.v2.uploader.upload(imagePath, {
@@ -159,6 +170,5 @@ class productServices {
 
     return product
   }
-  
 }
 export default new productServices()

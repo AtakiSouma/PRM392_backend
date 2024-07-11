@@ -36,7 +36,7 @@ class paymentService {
       amount: price,
       description: `Shop Ecommecrce Payment for the payment #${transID}`,
       bank_code: '',
-      callback_url: 'http://192.168.43.159:8080/api/v1/payment/callback',
+      callback_url: 'http://192.168.1.8:8080/api/v1/payment/callback',
       mac: ''
     }
     const data =

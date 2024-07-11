@@ -11,7 +11,7 @@ import generateRandomPhoneNumber from '~/utils/randomPhone'
 import { UserRecord } from 'firebase-admin/auth'
 import { verifyToken } from '~/utils/auth.utils'
 import path from 'node:path'
-import ejs from 'ejs'
+import ejs, { promiseImpl } from 'ejs'
 import { sendMail } from '~/utils/sendMail'
 class authServices {
   private getJsonWebToken = async (email: string, id: string) => {
@@ -36,7 +36,7 @@ class authServices {
     }
   }
 
-  public async login({ email, password }: UserLoginParams, res: Response, next: NextFunction) {
+  public async login({ email, password, fcmToken }: UserLoginParams, res: Response, next: NextFunction) {
     const user = await prisma.users.findUnique({
       where: { email: email },
       include: {
@@ -58,6 +58,13 @@ class authServices {
     if (compare === false) {
       return next(new ErrorHandler('Password is not correct', HttpStatusCodes.FORBIDDEN))
     }
+    await prisma.users.update({
+      where: { email: email },
+      data: {
+        fcmToken: fcmToken
+      }
+    })
+    console.log('fcm token updated', fcmToken)
     const TokenGenerated: TokenGenerate = {
       email: user.email,
       full_name: user.full_name,
@@ -113,7 +120,7 @@ class authServices {
         last_name: lastName,
         phone_number: generateRandomPhoneNumber(),
         is_active: true,
-        role_id: '80c70ad7-aa3a-471a-9992-48932658e2e5',
+        role_id: '4d100fe4-7340-4768-93fd-eb7a095f5765',
         avatar: 'https://i.pinimg.com/736x/3b/72/62/3b72621cba7e1b12facb8cd223de9957.jpg'
       }
     })
@@ -152,7 +159,7 @@ class authServices {
           phone_number: generateRandomPhoneNumber(),
           is_active: true,
           status: true,
-          role_id: '80c70ad7-aa3a-471a-9992-48932658e2e5',
+          role_id: '4d100fe4-7340-4768-93fd-eb7a095f5765',
           avatar: 'https://i.pinimg.com/736x/3b/72/62/3b72621cba7e1b12facb8cd223de9957.jpg'
         }
       })

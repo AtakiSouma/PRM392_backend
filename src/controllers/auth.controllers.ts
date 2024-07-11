@@ -9,11 +9,11 @@ import prisma from '~/libs/prisma'
 const authController = {
   login: CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, password } = req.body
+      const { email, password, fcmToken } = req.body
       if (!email || !password) {
         return next(new ErrorHandler('Invalid input', HttpStatusCodes.NOT_FOUND))
       }
-      const user = await authServices.login({ email, password }, res, next)
+      const user = await authServices.login({ email, password, fcmToken }, res, next)
       if (user) sendSuccessResponse(res, HttpStatusCodes.OK, user)
     } catch (error) {
       console.log(error)
@@ -53,7 +53,7 @@ const authController = {
   loginwithgoogle: CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { idToken } = req.body
-     
+
       if (!idToken) {
         return next(new ErrorHandler('id token not found', HttpStatusCodes.NOT_FOUND))
       }

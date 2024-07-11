@@ -8,6 +8,7 @@ export interface TokenGenerate {
 export interface UserLoginParams {
   email: string
   password: string
+  fcmToken :string
 }
 export interface UserRegisterParams {
   email: string

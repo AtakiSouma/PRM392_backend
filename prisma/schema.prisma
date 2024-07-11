@@ -9,24 +9,28 @@ datasource db {
 }
 
 model Users {
-    id           String   @id @default(uuid())
-    first_name   String
-    avatar       String   @db.Text
-    middle_name  String   @db.Text
-    last_name    String   @db.Text
-    full_name    String   @db.Text
-    email        String   @unique
-    password     String?   @db.Text
-    phone_number String   @db.Text
-    is_active    Boolean  @default(true)
-    status       Boolean  @default(true)
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id            String               @id @default(uuid())
+    first_name    String
+    avatar        String               @db.Text
+    fcmToken      String?
+    middle_name   String               @db.Text
+    last_name     String               @db.Text
+    full_name     String               @db.Text
+    email         String               @unique
+    password      String?              @db.Text
+    phone_number  String               @db.Text
+    address       String?
+    is_active     Boolean              @default(true)
+    status        Boolean              @default(true)
+    createdAt     DateTime             @default(now())
+    updatedAt     DateTime             @updatedAt
+    conversations ConversationMember[]
 
     role_id String
     role    Roles  @relation(fields: [role_id], references: [id])
 
-    Orders Order[]
+    Orders  Order[]
+    Message Message[]
 
     @@index([role_id])
 }
@@ -87,9 +91,9 @@ model Product {
 }
 
 model ProductImages {
-    id        String   @id @default(uuid())
-    image_url String   @db.Text
-    product   Product  @relation(fields: [productId], references: [id])
+    id        String  @id @default(uuid())
+    image_url String  @db.Text
+    product   Product @relation(fields: [productId], references: [id])
     productId String
 
     @@index([productId])
@@ -98,6 +102,7 @@ model ProductImages {
 model Order {
     id         String      @id @default(uuid())
     totalPrice Float
+    orderName  String      @default("orderName")
     note       String      @db.Text
     status     String      @default("Processing")
     userId     String
@@ -120,4 +125,43 @@ model OrderItem {
 
     @@index([orderId])
     @@index([productId])
+}
+
+model Conversation {
+    id            String               @id @default(uuid())
+    groupTitle    String               @unique
+    lastMessage   String?
+    members       ConversationMember[]
+    lastMessageId String?
+    createdAt     DateTime             @default(now())
+    updatedAt     DateTime             @updatedAt
+    messages      Message[]
+}
+
+model ConversationMember {
+    id             String       @id @default(uuid())
+    userId         String
+    conversationId String
+    createdAt      DateTime     @default(now())
+    user           Users        @relation(fields: [userId], references: [id])
+    conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+    @@unique([userId, conversationId])
+    @@index([conversationId])
+}
+
+model Message {
+    id             String   @id @default(uuid())
+    senderId       String
+    text           String?
+    images         String?
+    conversationId String
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+
+    sender       Users        @relation(fields: [senderId], references: [id])
+    conversation Conversation @relation(fields: [conversationId], references: [id])
+
+    @@index([senderId])
+    @@index([conversationId])
 }
